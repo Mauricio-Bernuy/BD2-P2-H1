@@ -1,6 +1,7 @@
 import nltk
 import numpy 
 import math
+import pprint
 from nltk.corpus import stopwords
 nltk.download('punkt')
 nltk.download('stopwords')
@@ -64,12 +65,18 @@ for token in index:
             norm_tf = 1 + math.log(tf,10) 
         df = pairs[0]
         if (df != 1):
-            print('überheider')
+            print('überheider', df)
         norm_idf = math.log(collection_size/df)
 
         tf_idf = norm_tf * norm_idf
         index[token][1][i] = (tf_idf, pairs[1])
-        print('heider')
+        #print('heider')
         i = i + 1
 
 print('saludos')
+
+file = open('workfile.txt', 'w')
+pp = pprint.PrettyPrinter(indent=4, stream=file)
+pp.pprint(index)
+
+
