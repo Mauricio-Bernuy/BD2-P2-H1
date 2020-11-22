@@ -27,7 +27,7 @@ stemmer = SnowballStemmer('spanish')
 my_dir = 'twitter_tracking/test/'
 indexstore_dir = 'indexstore/'
 index = dict()
-doc_lengths = dict()
+doc_lengths = dict() #CHANGE THIS SHEIT for actual NORMA LMAO GENIUS pogchap
 collection_size = 0
 print(os.listdir(my_dir))
 block_size = 32 # KB 
@@ -84,10 +84,12 @@ for i in os.listdir(my_dir):
             tokens.sort()
             for token in tokens:
                 if token not in stoplist and token.isalpha():
-                    if key['id'] not in doc_lengths:
-                        doc_lengths[key['id']] = 1
-                    else:
-                        doc_lengths[key['id']] = doc_lengths[key['id']] + 1
+                    # if key['id'] not in doc_lengths:
+                    #     doc_lengths[key['id']] = 1
+                    # else:
+                    #     doc_lengths[key['id']] = doc_lengths[key['id']] + 1
+                    doc_lengths[key['id']] = 0
+
                     token_stemmed = stemmer.stem(token)
                     if token_stemmed not in index:
                         index[token_stemmed] = (1,{key['id']:1}) #(1,[(1,key['id'])])
@@ -100,12 +102,10 @@ for i in os.listdir(my_dir):
 
                         index[token_stemmed] = (index[token_stemmed][0] + 1, index[token_stemmed][1]) 
                 if (sys.getsizeof(index) >= block_size*1024):
-                    #if_idf_ize() #nope, incomplete result gives wrong values
                     pickle.dump(sorted(index.items()), open( indexstore_dir + 'indexdata' + str(fcount) + '.dat', "wb" ))
                     fcount = fcount + 1
                     index.clear()
 if (bool(index) == True):
-    #if_idf_ize() #nope, incomplete result gives wrong values
     pickle.dump(sorted(index.items()), open( indexstore_dir + 'indexdata' + str(fcount) + '.dat', "wb" ))
     fcount = fcount + 1
     index.clear()
@@ -124,18 +124,26 @@ def mergeindex(index1, index2):
     key1 = next(it1)
     key2 = next(it2)
     
-    while(it1 != sys.maxsize and it2 != sys.maxsize):
-        
-        if (it1 < it2):
-            next(it1,sys.maxsize)
+    while(key1 != sys.maxsize and key2 != sys.maxsize):
+        if (key1 < key2):
+            if key1 not in index3:
+                index3[key1] = index1[key1]
+            else:
+                for keys in index1[key1][1]:
+                    if keys not in index3[key1][1]:
+                        index3[key1][1][keys] = index1[key1][1][keys]
+                        
 
-        elif (it1 > it2):
-            next(it2,sys.maxsize)
+            key1 = next(key1, sys.maxsize)
+
+        elif (key1 > key2):
+            index3[key2] = index2[key2]
+            key2 = next(key2, sys.maxsize)
 
         else:
             print('equals')
-            next(it1,sys.maxsize)
-            next(it2,sys.maxsize)
+            key1 = next(key1, sys.maxsize)
+            key2 = next(key2, sys.maxsize)
 
 
     #it1 = index1.begin()
@@ -144,3 +152,12 @@ def mergeindex(index1, index2):
     #    print('lol')
 
 mergeindex(pickle.load(open( indexstore_dir + 'indexdata0' + '.dat', "rb" )),pickle.load(open( indexstore_dir + 'indexdata1' + '.dat', "rb" )))
+
+def getTweet(id):
+    for i in os.listdir(my_dir):
+        with open(my_dir + i, encoding="utf8") as json_file:
+            data = json.load(json_file)
+            for key in data:
+                if (id == key['id']):
+                    return key['text'] 
+            print("No existing tweet")
