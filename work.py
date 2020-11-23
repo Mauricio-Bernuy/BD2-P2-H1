@@ -113,12 +113,20 @@ if (bool(index) == True):
 
 print('tweets yoinked')
 
-file = open('workfile.txt', 'w')
-pp = pprint.PrettyPrinter(indent=4, stream=file)
-pp.pprint(index)
-
 def mergeindex(index1, index2):
+    print('merging:',len(index1),'with',len(index2))
     index3 = dict()
+
+    if (len(index1) == 0):
+        print('result:',len(index1))
+        return index2
+    if (len(index2) == 0):
+        print('result:',len(index1))
+        return index1
+    if (len(index1) == 0 and len(index2) == 0):
+        print('result:',len(index3))
+        return index3
+
     it1 = iter(index1.keys())
     it2 = iter(index2.keys())
     key1 = next(it1)
@@ -172,36 +180,31 @@ def mergeindex(index1, index2):
 
             key1 = next(it1, sys.maxsize)
             key2 = next(it2, sys.maxsize)
-
+    
+    print('result:',len(index3))
     return index3
 
-files = os.listdir(indexstore_dir)
+def merge(ind_dir):
+    files = os.listdir(ind_dir)
+    def mergerec(length):
+        print(length)
+        if (length <= 1):
+            if (len(files) == 0):
+                return dict()
+            else:
+                return dict(pickle.load(open( indexstore_dir + files.pop(0), "rb" )))
+        else:
+            return mergeindex(mergerec(length/2),mergerec(length/2))
+    return mergerec(len(files))
 
-def mergeindexrec(files, l, r):
-    if l < r:
-        m = (l+(r-1))//2
-        idx1 = mergeindexrec(files, l, m)
-        idx2 = mergeindexrec(files, m+1, r)
-    print(len(files))
-    if (len(files) != 0):
-        return mergeindexact(files, l, r)
-    else:
-        if(idx1 is not None and idx2 is not None):
-            return mergeindex(idx1,idx2)
+finalindex = merge(indexstore_dir)
 
-def mergeindexact(files, l, r):
-    file1 = files.pop(0)
-    file2 = files.pop(0)
-    if (len(files) == 1):
-        return mergeindex(mergeindex(dict(pickle.load(open( indexstore_dir + file1, "rb" ))),dict(pickle.load(open( indexstore_dir + file2, "rb" )))), dict(pickle.load(open( indexstore_dir + files.pop(-1), "rb" ))))
-    else:
-        return mergeindex(dict(pickle.load(open( indexstore_dir + file1, "rb" ))),dict(pickle.load(open( indexstore_dir + file2, "rb" ))))
-
-
-
-#mergeindex(dict(pickle.load(open( indexstore_dir + 'indexdata0' + '.dat', "rb" ))),dict(pickle.load(open( indexstore_dir + 'indexdata1' + '.dat', "rb" ))))
-finalindex = mergeindexrec(files,0,len(files))
 print('end')
+
+file = open('workfile.txt', 'w')
+pp = pprint.PrettyPrinter(indent=4, stream=file)
+pp.pprint(index)
+
 def getTweet(id):
     for i in os.listdir(my_dir):
         with open(my_dir + i, encoding="utf8") as json_file:
