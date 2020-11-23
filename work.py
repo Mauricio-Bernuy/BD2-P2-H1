@@ -56,13 +56,13 @@ def if_idf_ize():
     print('saludos')
 
 def if_idf_calc(key,tkn,idx):
-    tf = idx[tkn][0]
+    tf = idx[tkn][1][key] #idx[tkn][0] 
     norm_tf = 0
     if (tf == 0):
         norm_tf = 0
     else:
         norm_tf = 1 + math.log(tf,10) 
-    df = idx[token][1][key]
+    df = idx[tkn][0] #idx[tkn][1][key] 
     if (df != 1):
         print('überheider', df)
     norm_idf = math.log(collection_size/df)
@@ -196,6 +196,8 @@ def mergeindexact(files, l, r):
         return mergeindex(mergeindex(dict(pickle.load(open( indexstore_dir + file1, "rb" ))),dict(pickle.load(open( indexstore_dir + file2, "rb" )))), dict(pickle.load(open( indexstore_dir + files.pop(-1), "rb" ))))
     else:
         return mergeindex(dict(pickle.load(open( indexstore_dir + file1, "rb" ))),dict(pickle.load(open( indexstore_dir + file2, "rb" ))))
+
+
 
 #mergeindex(dict(pickle.load(open( indexstore_dir + 'indexdata0' + '.dat', "rb" ))),dict(pickle.load(open( indexstore_dir + 'indexdata1' + '.dat', "rb" ))))
 finalindex = mergeindexrec(files,0,len(files))
