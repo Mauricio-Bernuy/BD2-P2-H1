@@ -27,7 +27,7 @@ stemmer = SnowballStemmer('spanish')
 my_dir = 'twitter_tracking/test/'
 indexstore_dir = 'indexstore/'
 index = dict()
-doc_lengths = dict()
+doc_lengths = dict() #CHANGE THIS SHEIT for actual NORMA LMAO GENIUS pogchap
 collection_size = 0
 print(os.listdir(my_dir))
 block_size = 32 # KB 
@@ -78,16 +78,18 @@ for i in os.listdir(my_dir):
     with open(my_dir + i, encoding="utf8") as json_file:
         data = json.load(json_file)
         for key in data:
-            print('current size: ',sys.getsizeof(index), index.__sizeof__())
+            #print('current size: ',sys.getsizeof(index), index.__sizeof__())
             collection_size = collection_size + 1
             tokens = nltk.word_tokenize(key['text'].lower())
             tokens.sort()
             for token in tokens:
                 if token not in stoplist and token.isalpha():
-                    if key['id'] not in doc_lengths:
-                        doc_lengths[key['id']] = 1
-                    else:
-                        doc_lengths[key['id']] = doc_lengths[key['id']] + 1
+                    # if key['id'] not in doc_lengths:
+                    #     doc_lengths[key['id']] = 1
+                    # else:
+                    #     doc_lengths[key['id']] = doc_lengths[key['id']] + 1
+                    doc_lengths[key['id']] = 0
+
                     token_stemmed = stemmer.stem(token)
                     if token_stemmed not in index:
                         index[token_stemmed] = (1,{key['id']:1}) #(1,[(1,key['id'])])
@@ -100,12 +102,10 @@ for i in os.listdir(my_dir):
 
                         index[token_stemmed] = (index[token_stemmed][0] + 1, index[token_stemmed][1]) 
                 if (sys.getsizeof(index) >= block_size*1024):
-                    #if_idf_ize() #nope, incomplete result gives wrong values
                     pickle.dump(sorted(index.items()), open( indexstore_dir + 'indexdata' + str(fcount) + '.dat', "wb" ))
                     fcount = fcount + 1
                     index.clear()
 if (bool(index) == True):
-    #if_idf_ize() #nope, incomplete result gives wrong values
     pickle.dump(sorted(index.items()), open( indexstore_dir + 'indexdata' + str(fcount) + '.dat', "wb" ))
     fcount = fcount + 1
     index.clear()
@@ -119,28 +119,92 @@ pp.pprint(index)
 
 def mergeindex(index1, index2):
     index3 = dict()
-    it1 = iter(list(index1))
-    it2 = iter(list(index2))
+    it1 = iter(index1.keys())
+    it2 = iter(index2.keys())
     key1 = next(it1)
     key2 = next(it2)
     
-    while(it1 != sys.maxsize and it2 != sys.maxsize):
-        
-        if (it1 < it2):
-            next(it1,sys.maxsize)
+    while(key1 != sys.maxsize and key2 != sys.maxsize):
+        if (key1 < key2):
+            if key1 not in index3:
+                index3[key1] = index1[key1]
+            else:
+                index3[key1] = (index3[key1][0] + index1[key1][0],index3[key1][1])
+                for keys in index1[key1][1]:
+                    if keys not in index3[key1][1]:
+                        index3[key1][1][keys] = index1[key1][1][keys]
+                    else:
+                        index3[key1][1][keys] = index3[key1][1][keys] + index1[key1][1][keys]
+                        
+            key1 = next(it1, sys.maxsize)
 
-        elif (it1 > it2):
-            next(it2,sys.maxsize)
+        elif (key1 > key2):
+            if key2 not in index3:
+                index3[key2] = index2[key2]
+            else:
+                index3[key2] = (index3[key2][0] + index2[key2][0], index3[key2][1])
+                for keys in index2[key2][1]:
+                    if keys not in index3[key2][1]:
+                        index3[key2][1][keys] = index2[key2][1][keys]
+                    else:
+                        index3[key2][1][keys] = index3[key2][1][keys] + index2[key2][1][keys]
+
+            key2 = next(it2, sys.maxsize)
 
         else:
-            print('equals')
-            next(it1,sys.maxsize)
-            next(it2,sys.maxsize)
+            #print('equals')
+            if key1 not in index3:
+                index3[key1] = index1[key1]
+            else:
+                index3[key1] = (index3[key1][0] + index1[key1][0],index3[key1][1])
+                for keys in index1[key1][1]:
+                    if keys not in index3[key1][1]:
+                        index3[key1][1][keys] = index1[key1][1][keys]
+                    else:
+                        index3[key1][1][keys] = index3[key1][1][keys] + index1[key1][1][keys]
 
+            index3[key2] = (index3[key2][0] + index2[key2][0], index3[key2][1])
+            for keys in index2[key2][1]:
+                if keys not in index3[key2][1]:
+                    index3[key2][1][keys] = index2[key2][1][keys]
+                else:
+                    index3[key2][1][keys] = index3[key2][1][keys] + index2[key2][1][keys]
 
-    #it1 = index1.begin()
-    #it2 = index2.begin()
-    #while (it1 != index1.end() and it2 != index2.end()):
-    #    print('lol')
+            key1 = next(it1, sys.maxsize)
+            key2 = next(it2, sys.maxsize)
 
-mergeindex(pickle.load(open( indexstore_dir + 'indexdata0' + '.dat', "rb" )),pickle.load(open( indexstore_dir + 'indexdata1' + '.dat', "rb" )))
+    return index3
+
+files = os.listdir(indexstore_dir)
+
+def mergeindexrec(files, l, r):
+    if l < r:
+        m = (l+(r-1))//2
+        idx1 = mergeindexrec(files, l, m)
+        idx2 = mergeindexrec(files, m+1, r)
+    print(len(files))
+    if (len(files) != 0):
+        return mergeindexact(files, l, r)
+    else:
+        if(idx1 is not None and idx2 is not None):
+            return mergeindex(idx1,idx2)
+
+def mergeindexact(files, l, r):
+    file1 = files.pop(0)
+    file2 = files.pop(0)
+    if (len(files) == 1):
+        return mergeindex(mergeindex(dict(pickle.load(open( indexstore_dir + file1, "rb" ))),dict(pickle.load(open( indexstore_dir + file2, "rb" )))), dict(pickle.load(open( indexstore_dir + files.pop(-1), "rb" ))))
+    else:
+        return mergeindex(dict(pickle.load(open( indexstore_dir + file1, "rb" ))),dict(pickle.load(open( indexstore_dir + file2, "rb" ))))
+
+#mergeindex(dict(pickle.load(open( indexstore_dir + 'indexdata0' + '.dat', "rb" ))),dict(pickle.load(open( indexstore_dir + 'indexdata1' + '.dat', "rb" ))))
+finalindex = mergeindexrec(files,0,len(files))
+print('end')
+def getTweet(id):
+    for i in os.listdir(my_dir):
+        with open(my_dir + i, encoding="utf8") as json_file:
+            data = json.load(json_file)
+            for key in data:
+                if (id == key['id']):
+                    return key['text'] 
+            print("No existing tweet")
