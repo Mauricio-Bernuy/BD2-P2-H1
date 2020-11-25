@@ -3,7 +3,9 @@ import numpy
 import math
 import pprint
 import pickle
+import math
 from nltk.corpus import stopwords
+from heapq import heappush, heappop
 nltk.download('punkt')
 nltk.download('stopwords')
 
@@ -200,7 +202,7 @@ def mergeindexact(files, l, r):
 
 
 #mergeindex(dict(pickle.load(open( indexstore_dir + 'indexdata0' + '.dat', "rb" ))),dict(pickle.load(open( indexstore_dir + 'indexdata1' + '.dat', "rb" ))))
-finalindex = mergeindexrec(files,0,len(files))
+#finalindex = mergeindexrec(files,0,len(files))
 print('end')
 def getTweet(id):
     for i in os.listdir(my_dir):
@@ -210,3 +212,38 @@ def getTweet(id):
                 if (id == key['id']):
                     return key['text'] 
             print("No existing tweet")
+
+def build_qindex(q, idx):
+  answer = dict()
+  for word in q:
+    if word not in answer:
+      answer[word] = [idx[word], {'query':q.count(word)}]
+    #else:
+    #  answer[word][1]['query'] = q.count(word)
+
+def search(q, idx):
+  answers = []
+  qindex = build_qindex(q,idx)
+  qword = {}
+  for word in qindex:
+    qword[word] = if_idf_calc(word, 'query', qindex)
+  for doc in idx:
+    numerator = 0
+    denomq = 0
+    denomd = 0
+    for word in qindex:
+      di = if_idf_calc(word, doc, index)
+      qi = qword[word]
+      numerator += di*qi
+      denomq += pow(qi,2)
+      denomd += pow(di,2)
+    compared_weight = numerator/(sqrt(denomq)*sqrt(denomd))
+    heappush(answers, (compared_weight, doc))
+    if(len(answers) > 50):
+      heappop(h)
+  return answers
+
+#search("abc", [])
+
+
+
