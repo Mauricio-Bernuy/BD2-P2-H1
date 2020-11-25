@@ -27,14 +27,14 @@ stemmer = SnowballStemmer('spanish')
 my_dir = 'twitter_tracking/test/'
 indexstore_dir = 'indexstore/'
 index = dict()
-doc_lengths = dict() #CHANGE THIS SHEIT for actual NORMA LMAO GENIUS pogchap
+norm = dict() 
 collection_size = 0
 print(os.listdir(my_dir))
-block_size = 32 # KB 
+block_size = 128 # KB 
 import sys
 print('current size: ', sys.getsizeof(index), index.__sizeof__())
 
-def if_idf_ize():
+def tf_idf_ize():
     for token in index:
         #i = 0
         for key in index[token][1]:
@@ -55,7 +55,9 @@ def if_idf_ize():
             #i = i + 1
     print('saludos')
 
-def if_idf_calc(key,tkn,idx):
+def tf_idf_calc(key,tkn,idx):
+    if key not in idx[tkn][1]:
+        return 0
     tf = idx[tkn][1][key] #idx[tkn][0] 
     norm_tf = 0
     if (tf == 0):
@@ -63,8 +65,8 @@ def if_idf_calc(key,tkn,idx):
     else:
         norm_tf = 1 + math.log(tf,10) 
     df = idx[tkn][0] #idx[tkn][1][key] 
-    if (df != 1):
-        print('überheider', df)
+    # if (df != 1):
+    #     print('überheider', df)
     norm_idf = math.log(collection_size/df)
 
     tf_idf = norm_tf * norm_idf
@@ -78,26 +80,19 @@ for i in os.listdir(my_dir):
     with open(my_dir + i, encoding="utf8") as json_file:
         data = json.load(json_file)
         for key in data:
-            #print('current size: ',sys.getsizeof(index), index.__sizeof__())
             collection_size = collection_size + 1
             tokens = nltk.word_tokenize(key['text'].lower())
             tokens.sort()
             for token in tokens:
                 if token not in stoplist and token.isalpha():
-                    # if key['id'] not in doc_lengths:
-                    #     doc_lengths[key['id']] = 1
-                    # else:
-                    #     doc_lengths[key['id']] = doc_lengths[key['id']] + 1
-                    doc_lengths[key['id']] = 0
-
+                    norm[key['id']] = 0
                     token_stemmed = stemmer.stem(token)
                     if token_stemmed not in index:
-                        index[token_stemmed] = (1,{key['id']:1}) #(1,[(1,key['id'])])
+                        index[token_stemmed] = (1,{key['id']:1})
                     else:
-                        if key['id'] not in [x for x in index[token_stemmed][1]]:#index[token_stemmed][1]]:
-                            index[token_stemmed][1][key['id']] = 1#((1,key['id'])) 
+                        if key['id'] not in [x for x in index[token_stemmed][1]]:
+                            index[token_stemmed][1][key['id']] = 1
                         else:
-                            #index[token_stemmed][1][-1] = (index[token_stemmed][1][-1][0] + 1,index[token_stemmed][1][-1][1])
                             index[token_stemmed][1][key['id']] = index[token_stemmed][1][key['id']] + 1
 
                         index[token_stemmed] = (index[token_stemmed][0] + 1, index[token_stemmed][1]) 
@@ -105,11 +100,11 @@ for i in os.listdir(my_dir):
                     pickle.dump(sorted(index.items()), open( indexstore_dir + 'indexdata' + str(fcount) + '.dat', "wb" ))
                     fcount = fcount + 1
                     index.clear()
+
 if (bool(index) == True):
     pickle.dump(sorted(index.items()), open( indexstore_dir + 'indexdata' + str(fcount) + '.dat', "wb" ))
     fcount = fcount + 1
     index.clear()
-
 
 print('tweets yoinked')
 
@@ -198,6 +193,18 @@ def merge(ind_dir):
     return mergerec(len(files))
 
 finalindex = merge(indexstore_dir)
+
+def generate_norm(idx,norm):
+    for key,v in norm.items():
+        curr_norm = 0
+        for token in idx.keys():
+            tf_idf = tf_idf_calc(key,token,idx)
+            # if tf_idf != 0:
+            #     print(key,'in', token, 'is', tf_idf)
+            curr_norm = curr_norm + pow(tf_idf,2)
+        norm[key] = pow(curr_norm,0.5)
+
+generate_norm(finalindex,norm)
 
 print('end')
 
