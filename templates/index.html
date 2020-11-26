@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <title>Proyecto 2</title>
+  </head>
+  <body>
+    <form method=post enctype=multipart/form-data>
+      <input type=file name=file multiple>
+      <input type=submit value=Upload>
+    </form>
+    <input type=submit value=Upload>
+    <output id="list"></output> 
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">Proyecto 2 -  Hito 1</a>  
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto">
+      <form class="form-inline my-4 my-lg-0">
+        <input id="frasse" class="form-control mr-sm-2" placeholder="Frase" aria-label="Search">
+        <button id="getphrase" class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+      </form>
+        <button id="showres" class="btn btn-outline-success my-2 my-sm-0" type="submit">Show Results</button>
+    </div>
+  {% for each in collection %}
+  {{ each }}
+  {% endfor %}
+  </nav>
+    <div>
+      <p id="results"></p>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script type="text/javascript">
+          
+        var phrase = document.getElementById("getphrase").addEventListener("click", function(){
+          return fras = document.getElementById("frasse").value
+        })      
+      function getTweet(id){
+        for (i in ids){
+          if (id == key['id']){
+                    return key['text'] 
+          }
+          print("No existing tweet")
+        }
+      }
+
+      //var files = JSON.parse(collection);
+      var files = {{ collection|safe}}
+      for (i = 0; i < (files.length); i++){
+        //alert(files[i])
+      }
+
+      var contextPath = "${pageContext.request.contextPath}"
+      console.log(contextPath)
+      for (i = 0; i < (files.length); i++) {
+        console.log(files[i]);
+        $.getJSON( "tweets_2018-08-09.json", function( json ) {
+          console.log( "JSON Data: " + json);
+        });
+        
+/*    $.getJSON(files[i], function(data) {
+        document.getElementById("showres").addEventListener("click", function(){
+          for (i = 0; i < 10; i++){  
+            var para = document.createElement("P");
+            para.innerHTML = data[i].text
+            document.getElementById("results").appendChild(para)
+          }  
+        })
+      }  
+      );*/
+    }
+      
+    </script>
+  </body>
+</html>
