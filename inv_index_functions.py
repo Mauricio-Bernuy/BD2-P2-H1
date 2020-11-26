@@ -26,7 +26,7 @@ stoplist += ['?','¿','.',',',';','!','¡','«','»',':','(',')','@','rt','#','`
 
 stemmer = SnowballStemmer('spanish')
 
-my_dir = 'twitter_tracking/test/'
+my_dir = 'collection/'
 indexstore_dir = 'indexstore/'
 temp_index = dict()
 norm = dict() 
@@ -34,7 +34,6 @@ mergedindex = dict()
 collection_size = 0
 print(os.listdir(my_dir))
 block_size = 32 # KB 
-print('current size: ', sys.getsizeof(temp_index), temp_index.__sizeof__())
 
 def tf_idf_calc(key,tkn,idx):
     global collection_size
@@ -47,7 +46,10 @@ def tf_idf_calc(key,tkn,idx):
     else:
         norm_tf = 1 + math.log(tf,10) 
     df = idx[tkn][0] 
-    norm_idf = math.log(collection_size/df)
+    if df != 0:
+        norm_idf = math.log(collection_size/df)
+    else:
+        norm_idf = 0
 
     tf_idf = norm_tf * norm_idf
     return tf_idf
@@ -88,7 +90,7 @@ def index_build():
         temp_index.clear()
     print('tweets yoinked')
 
-index_build()
+#index_build()
 
 def mergeindex(index1, index2):
     print('merging:',len(index1),'with',len(index2))
@@ -137,7 +139,6 @@ def mergeindex(index1, index2):
             key2 = next(it2, sys.maxsize)
 
         else:
-            #print('equals')
             if key1 not in index3:
                 index3[key1] = index1[key1]
             else:
@@ -174,7 +175,7 @@ def merge(ind_dir):
             return mergeindex(mergerec(length/2),mergerec(length/2))
     return mergerec(len(files))
 
-mergedindex = merge(indexstore_dir)
+#mergedindex = merge(indexstore_dir)
 
 def generate_norm(idx,norm):
     print('generating norm...')
@@ -186,53 +187,21 @@ def generate_norm(idx,norm):
         norm[key] = pow(curr_norm,0.5)
     print('done')
 
-generate_norm(mergedindex,norm)
+#generate_norm(mergedindex,norm)
+#print('end')
 
-file = open('workfile.txt', 'w')
-pp = pprint.PrettyPrinter(indent=4, stream=file)
-pp.pprint(mergedindex)
+# file = open('workfile.txt', 'w')
+# pp = pprint.PrettyPrinter(indent=4, stream=file)
+# pp.pprint(mergedindex)
 
 def getTweet(id):
     for i in os.listdir(my_dir):
-        with open(my_dir + i, encoding="utf8") as json_file:
+        with open(my_dir + i, encoding="utf-8") as json_file:
             data = json.load(json_file)
             for key in data:
                 if (id == key['id']):
                     return key['text'] 
             print("No existing tweet")
-
-
-# def search(query, idx):
-#     print("Starts search for", query)
-#     answers = []
-#     query = nltk.word_tokenize(query.lower())
-#     q = []
-#     for word in query:
-#       q.append(stemmer.stem(word))
-#     qindex = build_qindex(q, idx)
-#     qword = {}
-#     qnorm = {'query': 0}
-#     generate_norm(qindex, qnorm)
-#     for word in qindex:
-#         qword[word] = tf_idf_calc('query', word, qindex)
-#     for doc in norm:
-#         numerator = 0
-#         denomq = 0
-#         denomd = 0
-#         for word in qindex:
-#             if word not in idx:
-#               break
-#             di = tf_idf_calc(doc, word, idx)
-#             qi = qword[word]
-#             numerator += di*qi
-#         compared_weight = numerator/(qnorm['query']*norm[doc])
-#         heappush(answers, (compared_weight, doc))
-#         if(len(answers) > 10):
-#             heappop(answers)
-#     answers = sorted(answers, key=lambda tup: tup[0], reverse=True)
-#     # pp = pprint.PrettyPrinter(indent=4)
-#     # pp.pprint(answers)
-#     return answers
 
 def fillTweets(ids): #list
     for i in os.listdir(my_dir):
@@ -268,8 +237,6 @@ def search(query, idx):
         qword[word] = tf_idf_calc('query', word, qindex)
     for doc in norm:
         numerator = 0
-        denomq = 0
-        denomd = 0
         for word in qindex:
             if word not in idx:
               break
@@ -289,6 +256,7 @@ def search(query, idx):
     fillTweets(answers)
     pp = pprint.PrettyPrinter(indent=4)
     pp.pprint(answers)
+
     return answers
 
-search("hombre horrible", mergedindex)
+#search("hombre horrible honesto hombre hombre", mergedindex)
