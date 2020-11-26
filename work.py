@@ -3,6 +3,7 @@ import numpy
 import math
 import pprint
 import pickle
+from heapq import heappush, heappop
 from nltk.corpus import stopwords
 nltk.download('punkt')
 nltk.download('stopwords')
@@ -217,3 +218,48 @@ def getTweet(id):
                 if (id == key['id']):
                     return key['text'] 
             print("No existing tweet")
+
+def build_qindex(q, idx):
+    answer = {}
+    for word in q:
+        if word not in answer:
+            if word in idx:
+              answer[word] = (idx[word][0], {'query':q.count(word)})
+            else:
+              answer[word] = (0, {'query':q.count(word)})
+    return answer
+
+def search(query, idx):
+    print("Starts search for", query)
+    answers = []
+    query = nltk.word_tokenize(query.lower())
+    q = []
+    for word in query:
+      q.append(stemmer.stem(word))
+    qindex = build_qindex(q, idx)
+    qword = {}
+    qnorm = {'query': 0}
+    generate_norm(qindex, qnorm)
+    for word in qindex:
+        qword[word] = tf_idf_calc('query', word, qindex)
+    for doc in norm:
+        numerator = 0
+        denomq = 0
+        denomd = 0
+        for word in qindex:
+            if word not in idx:
+              break
+            di = tf_idf_calc(doc, word, idx)
+            qi = qword[word]
+            numerator += di*qi
+        compared_weight = numerator/(qnorm['query']*norm[doc])
+        heappush(answers, (compared_weight, doc))
+        if(len(answers) > 10):
+            heappop(answers)
+    answers = sorted(answers, key=lambda tup: tup[0], reverse=True)
+    # pp = pprint.PrettyPrinter(indent=4)
+    # pp.pprint(answers)
+    return answers
+
+#search("hola como estas", finalindex)
+search("hombre horrible honesto hombre hombre", finalindex)
