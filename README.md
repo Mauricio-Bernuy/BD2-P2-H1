@@ -39,6 +39,7 @@ El diseño de este índice permite que todos los archivos separados sean mezclad
 El cálculo de las distancias, como se mencionó previamente, está basado en la **Distancia Coseno**. Su implementación específica esta basada en hacer un análisis inicial de la query y luego comparar dicha query con todo el resto de documentos en el Índice Invertido principal. Por conveniencia en la programación y para poder reutilizar las funciones designadas al cálculo del *idf* y *tf*, se arma un pequeño Índice Invertido solamente para la query. El *df* del mismo se obtiene del Índice Invertido principal de los *tweets*, mientras el resto de información por termino se guarda en el mismo formato tal que es compatible y comparable directamente con cualquiera de los otros documentos. De esa forma se aplica directamente la fórmula:
 ![](https://i.imgur.com/WE5CNmh.png),
 donde qi es el peso idf-tf del query para el término i, y di es el peso idf-tf del documento para el término i. Se usan las siguientes funciones para calcularlo:
+
 ![](https://i.imgur.com/sbr0IEy.jpg)
 
 Estos son utilizados por lo tanto en la función de búsqueda:
