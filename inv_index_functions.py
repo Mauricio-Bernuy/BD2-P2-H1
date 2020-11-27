@@ -57,7 +57,7 @@ def tf_idf_calc(key,tkn,idx):
 def index_build():
     fcount = 0
     global collection_size
-    print(sys.maxsize)
+    #print(sys.maxsize)
     for i in os.listdir(my_dir):
         print('file open: ',i)
         with open(my_dir + i, encoding="utf8") as json_file:
@@ -179,20 +179,16 @@ def merge(ind_dir):
 
 def generate_norm(idx,norm):
     print('generating norm...')
-    for key,v in norm.items():
-        curr_norm = 0
-        for token in idx.keys():
+    for token in idx.keys():
+        for key in idx[token][1].keys(): #norm.items():
             tf_idf = tf_idf_calc(key,token,idx)
-            curr_norm = curr_norm + pow(tf_idf,2)
-        norm[key] = pow(curr_norm,0.5)
+            norm[key] = norm[key] + pow(tf_idf,2)
+    for key,v in norm.items():
+        if (norm[key] == 0):
+            print('uh oh', key)
+        norm[key] = pow(norm[key],0.5)
+    
     print('done')
-
-#generate_norm(mergedindex,norm)
-#print('end')
-
-# file = open('workfile.txt', 'w')
-# pp = pprint.PrettyPrinter(indent=4, stream=file)
-# pp.pprint(mergedindex)
 
 def getTweet(id):
     for i in os.listdir(my_dir):
@@ -233,30 +229,33 @@ def search(query, idx):
     qword = {}
     qnorm = {'query': 0}
     generate_norm(qindex, qnorm)
-    for word in qindex:
-        qword[word] = tf_idf_calc('query', word, qindex)
-    for doc in norm:
-        numerator = 0
+    if qnorm['query'] != 0:
         for word in qindex:
-            if word not in idx:
-              break
-            di = tf_idf_calc(doc, word, idx)
-            qi = qword[word]
-            numerator += di*qi
-        # a = qnorm['query']
-        # b = norm[doc]
-        compared_weight = numerator/(qnorm['query']*norm[doc])
-        heappush(answers, (compared_weight, doc)) #({doc: (compared_weight, 'empty')}))
-        if(len(answers) > 10):
-            heappop(answers)
+            qword[word] = tf_idf_calc('query', word, qindex)
+        for doc in norm:
+            numerator = 0
+            for word in qindex:
+                if word not in idx:
+                    break
+                di = tf_idf_calc(doc, word, idx)
+                qi = qword[word]
+                numerator += di*qi
+            compared_weight = 0
+            if norm[doc] == 0 or qnorm['query'] == 0:
+                #print('zero')
+                compared_weight = 0
+            else: 
+                compared_weight = numerator/(qnorm['query']*norm[doc])
+            heappush(answers, (compared_weight, doc)) 
+            if(len(answers) > 10):
+                heappop(answers)
 
     answers = sorted(answers, key=lambda tup: tup[0], reverse=True)
+    answers = [i for i in answers if i[0] != 0]
     answers = [x[::-1] for x in answers]
-    answers = dict(answers) #({doc: (compared_weight, 'empty')}))
+    answers = dict(answers) 
     fillTweets(answers)
     pp = pprint.PrettyPrinter(indent=4)
     pp.pprint(answers)
 
     return answers
-
-#search("hombre horrible honesto hombre hombre", mergedindex)
