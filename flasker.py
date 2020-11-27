@@ -10,6 +10,13 @@ INDEX_PATH = 'indexstore'
 QUERY = 'query'
 ALLOWED_EXTENSIONS= {'json'}
 
+def createpaths():
+    for dir in [UPLOAD_PATH, INDEX_PATH]:
+        if not os.path.exists(dir):
+            os.makedirs(dir)
+
+createpaths()
+
 def clearfiles():
     for dir in [UPLOAD_PATH, INDEX_PATH]:
         for path in os.listdir(dir):
