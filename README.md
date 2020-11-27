@@ -22,9 +22,8 @@ InvertedIndex = { token : [ df , { docid : tf } ] }
 Como se muestra expresado en forma de código, nuestro Índice Invertido es un diccionario que tiene por llave los tokens que hay en la página de memoria, y que tiene por valor un arreglo cuyo primer elemento es su **Document Frequency**, y cuyo segundo elemento es otro diccionario cuya llaves son los documentos que contienen a dicho token y cuyo valor sería la **Term Frequency** en ese documento. La utilidad de la implementación de esta estructura está en la reutilización de estos valores y su rápido acceso para el cálculo del **tf-idf**, siendo también necesario este diseño para la indexación en bloques que hablaremos más adelante. En el programa que se encuentra en el [Github](https://github.com/Mauricio-Bernuy/BD2-P2-H1) del proyecto, se puede ver como se accede directamente a los valores pre-calculados del índice para poder hacer algunos de estos cálculos, como por ejemplo el de la norma.
 
 La construcción misma del índice invertido se basa en un proceso iterativo basado en bloques de memoria, el cual se discute en el siguiente punto. En la siguiente función, se ve la implementación que se utilizó.
+![](https://i.imgur.com/3F2vgRh.jpg)
 
-![](https://i.imgur.com/ulojX43.png)
-![](https://i.imgur.com/uLvcpNt.png)
 
 
 ### Manejo en memoria secundaria 
@@ -32,23 +31,31 @@ Siguiendo el concepto de indexación por bloques y el **SPIMI**, los índices se
 
 El diseño de este índice permite que todos los archivos separados sean mezclados en un solo índice completo, idéntico al resultante del original, utilizando un método similar a un *mergesort*. Se utiliza un algoritmo para mezclar los incidencias de los tokens sumando sus *Document Frequencies*, y sus producciones se combinan asemejando a un OR. Este se repite hasta obtener el índice completo. En la siguiente imagen, se ve la iteración que se hace.
 
-![](https://i.imgur.com/8EBhD5v.png)
+![](https://i.imgur.com/iP2GvYS.jpg)
+![](https://i.imgur.com/esefaf7.jpg)
 
 
 ### Calcular similitudes
 El cálculo de las distancias, como se mencionó previamente, está basado en la **Distancia Coseno**. Su implementación específica esta basada en hacer un análisis inicial de la query y luego comparar dicha query con todo el resto de documentos en el Índice Invertido principal. Por conveniencia en la programación y para poder reutilizar las funciones designadas al cálculo del *idf* y *tf*, se arma un pequeño Índice Invertido solamente para la query. El *df* del mismo se obtiene del Índice Invertido principal de los *tweets*, mientras el resto de información por termino se guarda en el mismo formato tal que es compatible y comparable directamente con cualquiera de los otros documentos. De esa forma se aplica directamente la fórmula:
 ![](https://i.imgur.com/WE5CNmh.png),
 donde qi es el peso idf-tf del query para el término i, y di es el peso idf-tf del documento para el término i. Se usan las siguientes funciones para calcularlo:
-![](https://i.imgur.com/Lwi905S.png)
-![](https://i.imgur.com/0lIFktc.png)
+![](https://i.imgur.com/sbr0IEy.jpg)
+
+Estos son utilizados por lo tanto en la función de búsqueda:
+![](https://i.imgur.com/RvR8rO9.jpg)
 
 Los resultados son finalmente enlistados como un arreglo de pares (similitud, docid) ordenados por similitud de forma descendente, de forma que estos puedan ser accedidos cómodamente por la aplicación que los muestra.
 
 ### Aplicación
 Con el fin de crear una aplicación y probar los métodos implementados, se utilizó **Flask** para realizar un backend compatible con Python, y se utilizó HTML con Bootstrap y Javascript para el frontend.
 
-La aplicación se ve de la siguiente manera:
-![](https://i.imgur.com/uL4SUbR.png)
+El programa para ejecutar Flask es el siguiente:
+![](https://i.imgur.com/JzyfTgf.jpg)
+Este hace uso de las funciones previamente implementadas, las carga y las comunica a sus archivos en html que reciben el arreglo de resultados y los muestra.
+
+La aplicación se ve de la siguiente manera habiendo hecho una búsqueda de "hola", mostrando tanto el tweet como su relevancia asociada.
+![](https://i.imgur.com/k5lCeus.png)
+
 
 Lo primero que se hace es escoger los *tweets* recopilados, y luego de cargarlos, se debe ingresar el query, frase que va a ser buscada. Posteriormente, se presiona el boton de "Show Results", y este muestra los tweets, junto con su Scoring, del mas cercano al mas lejano.
 
